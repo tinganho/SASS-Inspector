@@ -1,0 +1,20 @@
+{
+  "name": "Scrullo",
+  "version": "1.0",
+  "manifest_version": 2,
+  "description": "Makes it easier to manage scrum in Trello",
+  "permissions": [
+    "https://*/*",
+    "notifications"
+  ],
+  "content_scripts" : [
+    {
+     "matches" : ["https://trello.com/*"],
+     "css" : ["scrullo_style.css"],
+     "js" : ["jquery.js", "system.js", "scrullo.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    "images/exitBtn.png"
+  ]
+}
