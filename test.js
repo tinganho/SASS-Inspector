@@ -13,11 +13,18 @@ var SASSINSPECTOR = (function($){
   // Description of your variable
   SASS_DEBUG_INFO = [];
   
+  
   /* 
   -------------------------------------------------------
   Constants
   -------------------------------------------------------
   */
+ 
+ 
+  /**
+   * @constants object
+   *  Contains URI schemas for different editors
+   */
   const editorProtocols = {
         txmt: "Textmate",
         mvim: "MacVim",
@@ -35,17 +42,6 @@ var SASSINSPECTOR = (function($){
   // Description of your variable
   C.your_first_public_variable;
 
-  /**
-   *  @object 
-   *    Example object, this is an example project
-   *  @method
-   */
-  C.example_object = {
-    method1: function () {
-
-    }
-  }
-
 
   /* 
   -------------------------------------------------------
@@ -58,7 +54,7 @@ var SASSINSPECTOR = (function($){
    *  @constructor
    */
   C.constructor = function () {
-    C.test();
+    C.evaluateCode();
   }
 
   /* 
@@ -70,23 +66,27 @@ var SASSINSPECTOR = (function($){
  
   /**
    * @private method
-   * 
+   *  Gets SASS properties like file names and line numbers for different CSS selectors
+   * @result Array 
+   *  Returns an array of objects containing css selectors, file names & CSS selectors
    */
-  function pageGetProperties() {
+  function getSASSProperties() {
     
-    var n = 0;
-    var sassStylesheet = false;
-    SASS_DEBUG_INFO = new Array();
+    function getLineNumber() {
+      
+    }
+    function getFileName() {
+      
+    }
     function searchAStyleSheet(styleSheet) {
       
       if(styleSheet.cssRules == null) return;
       
       var rules = styleSheet.cssRules;
       
-      // Minimum requirements for a SASS debug stylesheet    
+      // Minimum requirements for a SASS debug stylesheet, for boosting performance 
       if(rules[0].type == CSSRule.MEDIA_RULE) {
         if(rules[0].media.mediaText != '-sass-debug-info') return;
-        sassStylesheet = true;
       }else if(rules[0].type == CSSRule.STYLE_RULE) {
         return;
       }
@@ -95,13 +95,9 @@ var SASSINSPECTOR = (function($){
         if(rules[i].type == CSSRule.IMPORT_RULE) {
           searchAStyleSheet(rules[i].styleSheet);
         }
-        if(sassStylesheet){
-          // console.log(rules[i]);
-        }
         if(rules[i].type != CSSRule.MEDIA_RULE) continue;
         
         if(rules[i + 1].type != CSSRule.STYLE_RULE) continue;
-        
         
         if($($0).is(rules[i + 1].selectorText)) {
             var tmp = {
@@ -111,10 +107,8 @@ var SASSINSPECTOR = (function($){
             SASS_DEBUG_INFO.push(tmp);
         }
       }
-      
-      
     }
-    
+    SASS_DEBUG_INFO = new Array();
     var styleSheets = document.styleSheets;
     for(var i in styleSheets) {
       if(styleSheets[i].cssRules == null) continue;
@@ -124,22 +118,38 @@ var SASSINSPECTOR = (function($){
     
   }
   
-  /**
-   * 
-   */
   
   /* 
   -------------------------------------------------------
   Public methods 
   -------------------------------------------------------
   */
-  C.test = function() {
-    chrome.devtools.inspectedWindow.eval('(' + pageGetProperties.toString() + ')()', function(result, isException){
+ 
+ 
+  /**
+   * @public method
+   *  Evaluates code in the context of the inspected window
+   * @result void
+   */
+  C.evaluateCode = function() {
+    chrome.devtools.inspectedWindow.eval('(' + getSASSProperties.toString() + ')()', function(result, isException){
       document.write(JSON.stringify(result));
     });
+  }
+  
+  
+  /**
+   * @public method
+   *  Sorts CSS selector text based on specificity
+   * @param Array selectors
+   *  A selector of arrays
+   * @param Object element
+   *  The html element that is being "viewed"
+   */ 
+  C.sortCSSText(selectors, element) {
     
   }
-
+  
   // Execute constructor
   C.constructor();
 
