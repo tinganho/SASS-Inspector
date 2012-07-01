@@ -1,4 +1,4 @@
-var SASSINSPECTOR = (function($){
+var SASSINSPECTOR = (function(){
 
 
   var C = {}, // Shortname use application name followed by a C, like for Twitter, use TC.
@@ -79,13 +79,14 @@ var SASSINSPECTOR = (function($){
     var sassStylesheet = false;
     SASS_DEBUG_INFO = new Array();
     
-    function is( elem, selector ) {
+    function is(elem, selector) {
       var div = document.createElement("div");
       var matchesSelector = div.webkitMatchesSelector;
       return typeof selector == "string" ? matchesSelector.call( elem, selector ) : selector === elem;
     }
 
     function searchAStyleSheet(styleSheet) {
+      
       sassStylesheet = false;
       if(styleSheet.cssRules == null) return;
       
@@ -109,7 +110,7 @@ var SASSINSPECTOR = (function($){
         if(rules[i + 1].type != CSSRule.STYLE_RULE) continue;
         
         if(sassStylesheet){
-          // console.log(jQuery($0));
+          // console.log('hej');
         }
         
         if(is($0, rules[i + 1].selectorText)) {
@@ -157,4 +158,4 @@ var SASSINSPECTOR = (function($){
   return C;
 
 
-})(jQuery);
+})();
