@@ -78,7 +78,7 @@ var SASSINSPECTOR = (function($){
     var sassStylesheet = false;
     SASS_DEBUG_INFO = new Array();
     function searchAStyleSheet(styleSheet) {
-      
+      sassStylesheet = false;
       if(styleSheet.cssRules == null) return;
       
       var rules = styleSheet.cssRules;
@@ -95,15 +95,16 @@ var SASSINSPECTOR = (function($){
         if(rules[i].type == CSSRule.IMPORT_RULE) {
           searchAStyleSheet(rules[i].styleSheet);
         }
-        if(sassStylesheet){
-          // console.log(rules[i]);
-        }
+        
         if(rules[i].type != CSSRule.MEDIA_RULE) continue;
         
         if(rules[i + 1].type != CSSRule.STYLE_RULE) continue;
         
+        if(sassStylesheet){
+          // console.log(jQuery($0));
+        }
         
-        if($($0).is(rules[i + 1].selectorText)) {
+        if(jQuery($0).is(rules[i + 1].selectorText)) {
             var tmp = {
               sourceName: 'http://loc.unionen.se',
               cssText: rules[i + 1].cssText
@@ -135,7 +136,8 @@ var SASSINSPECTOR = (function($){
   */
   C.test = function() {
     chrome.devtools.inspectedWindow.eval('(' + pageGetProperties.toString() + ')()', function(result, isException){
-      document.write(JSON.stringify(result));
+      if(!isException)
+        document.write(JSON.stringify(result));
     });
     
   }
