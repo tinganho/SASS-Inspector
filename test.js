@@ -66,6 +66,7 @@ var SASSINSPECTOR = (function($){
   Private methods 
   -------------------------------------------------------
   */
+  
  
  
   /**
@@ -77,6 +78,13 @@ var SASSINSPECTOR = (function($){
     var n = 0;
     var sassStylesheet = false;
     SASS_DEBUG_INFO = new Array();
+    
+    function is( elem, selector ) {
+      var div = document.createElement("div");
+      var matchesSelector = div.webkitMatchesSelector;
+      return typeof selector == "string" ? matchesSelector.call( elem, selector ) : selector === elem;
+    }
+
     function searchAStyleSheet(styleSheet) {
       sassStylesheet = false;
       if(styleSheet.cssRules == null) return;
@@ -104,7 +112,7 @@ var SASSINSPECTOR = (function($){
           // console.log(jQuery($0));
         }
         
-        if(jQuery($0).is(rules[i + 1].selectorText)) {
+        if(is($0, rules[i + 1].selectorText)) {
             var tmp = {
               sourceName: 'http://loc.unionen.se',
               cssText: rules[i + 1].cssText
