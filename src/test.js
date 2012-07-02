@@ -58,7 +58,7 @@ var SASSINSPECTOR = (function(){
    *  @constructor
    */
   C.constructor = function () {
-    C.test();
+    C.evaluateCode();
   }
 
   /* 
@@ -83,6 +83,20 @@ var SASSINSPECTOR = (function(){
       var div = document.createElement("div");
       var matchesSelector = div.webkitMatchesSelector;
       return typeof selector == "string" ? matchesSelector.call( elem, selector ) : selector === elem;
+    }
+    
+    function getFileName(text) {
+      var regEx = /file:\/\/(.*)'/;
+      var matches = text.match(regEx);
+      return matches[0].substring(0, matches[0].length - 1);
+    }
+    
+    function getLineNumber(text){
+      var regex = /(line)\s{\s(font\-family:\s')\d+'/;
+      var matches = text.match(regex);
+      var newRegEx = /\d+/;
+      var lineNumber = (matches[0].match(newRegEx))[0];
+      return parseInt(lineNumber, 10);
     }
 
     function searchAStyleSheet(styleSheet) {
@@ -115,8 +129,9 @@ var SASSINSPECTOR = (function(){
         
         if(is($0, rules[i + 1].selectorText)) {
             var tmp = {
-              sourceName: 'http://loc.unionen.se',
-              cssText: rules[i + 1].cssText
+              cssText: rules[i + 1].cssText,
+              fileName: getFileName(rules[i].cssText),
+              lineNumber: getLineNumber(rules[i].cssText)
             }
             SASS_DEBUG_INFO.push(tmp);
         }
@@ -143,7 +158,13 @@ var SASSINSPECTOR = (function(){
   Public methods 
   -------------------------------------------------------
   */
-  C.test = function() {
+ 
+  /**
+   * @public method
+   *  Evaluate code
+   * @result void
+   */
+  C.evaluateCode = function() {
     chrome.devtools.inspectedWindow.eval('(' + pageGetProperties.toString() + ')()', function(result, isException){
       if(!isException)
         document.write(JSON.stringify(result));
