@@ -1,7 +1,7 @@
 var SASSINSPECTOR = (function(){
 
 
-  var C = {}, // Shortname use application name followed by a C, like for Twitter, use TC.
+  var C = {},
 
 
   /* 
@@ -18,11 +18,11 @@ var SASSINSPECTOR = (function(){
   Constants
   -------------------------------------------------------
   */
-  const editorProtocols = {
-        txmt: "Textmate",
-        mvim: "MacVim",
-        emacs: "Emacs"
-  };
+  const 
+  TEXTMATE = 'txmt',
+  SUBLIME = 'subl',
+  EMACS = 'emacs',
+  MACVIM = 'mvim' 
 
 
 
@@ -75,28 +75,54 @@ var SASSINSPECTOR = (function(){
    */
   function pageGetProperties() {
     
-    var n = 0;
-    var sassStylesheet = false;
+    var n = 0,
+    sassStylesheet = false,
     SASS_DEBUG_INFO = new Array();
     
     function is(elem, selector) {
-      var div = document.createElement("div");
-      var matchesSelector = div.webkitMatchesSelector;
+      var div = document.createElement("div"),
+      matchesSelector = div.webkitMatchesSelector;
       return typeof selector == "string" ? matchesSelector.call( elem, selector ) : selector === elem;
     }
-    
-    function getFileName(text) {
-      var regEx = /file:\/\/(.*)'/;
-      var matches = text.match(regEx);
-      return matches[0].substring(0, matches[0].length - 1);
+
+    function trim(text) {
+      return text.replace(/^\s+|\s+$/g, '');
     }
     
-    function getLineNumber(text){
-      var regex = /(line)\s{\s(font\-family:\s')\d+'/;
-      var matches = text.match(regex);
-      var newRegEx = /\d+/;
-      var lineNumber = (matches[0].match(newRegEx))[0];
+    function getFilePath(text) {
+      var regEx = /file:\/\/(.*)'/,
+      matches = text.match(regEx);
+      return matches[0].substring(0, matches[0].length - 1);
+    }
+
+    function getFileName(text) {
+      var regEx = /([^\/])*(?!\/)(\.scss)/,
+      matches = text.match(regEx);
+      return matches[0].substring(1, matches[0].length);
+    }
+    
+    function getLineNumber(text) {
+      var regEx = /(line)\s{\s(font\-family:\s')\d+'/,
+      matches = text.match(regEx),
+      newRegEx = /\d+/,
+      lineNumber = (matches[0].match(newRegEx))[0];
       return parseInt(lineNumber, 10);
+    }
+
+    function getCSSProperties(text) {
+      var regEx = /(|[a-z]|[A-Z]|[0-9]|\s|[\(\)\!\-\.\,])+\s*\:\s*(|[a-z]|[A-Z]|[0-9]|\s|[\(\)\!\-\.\,])+\;/gi,
+      matches = text.match(regEx),
+      properties = [];
+      console.log(matches);
+      // for(var i in matches) {
+      //   // var _properties = matches[i].split(':');
+        
+      //   // propertyKey = trim(_properties[0]);
+      //   // propertyValue = trim(_properties[1].replace(';', ''));
+      //   // properties.push({propertyKey: propertyKey, propertyValue: propertyValue});
+      // }
+      return properties;
+
     }
 
     function searchAStyleSheet(styleSheet) {
@@ -128,10 +154,16 @@ var SASSINSPECTOR = (function(){
         }
         
         if(is($0, rules[i + 1].selectorText)) {
+
+            var filePath = getFilePath(rules[i].cssText),
+            fileName = getFileName(filePath);
+
             var tmp = {
-              cssText: rules[i + 1].cssText,
-              fileName: getFileName(rules[i].cssText),
-              lineNumber: getLineNumber(rules[i].cssText)
+              cssText: rules[i + 1].selectorText,
+              filePath: filePath,
+              fileName: fileName,
+              lineNumber: getLineNumber(rules[i].cssText),
+              cssProperties: getCSSProperties(rules[i + 1].cssText)
             }
             SASS_DEBUG_INFO.push(tmp);
         }
@@ -145,8 +177,8 @@ var SASSINSPECTOR = (function(){
       if(styleSheets[i].cssRules == null) continue;
       searchAStyleSheet(styleSheets[i]);
     }
-    return SASS_DEBUG_INFO;
     
+    return SASS_DEBUG_INFO;
   }
   
   /**
@@ -166,11 +198,46 @@ var SASSINSPECTOR = (function(){
    */
   C.evaluateCode = function() {
     chrome.devtools.inspectedWindow.eval('(' + pageGetProperties.toString() + ')()', function(result, isException){
-      if(!isException)
-        document.write(JSON.stringify(result));
+      if(!isException){
+        var cssSelectorList = document.createElement('ul');
+        cssSelectorList.className = 'si-css-selector-list';
+        document.body.appendChild(cssSelectorList);
+        for(var i in result) {
+          
+          // Post element
+          var li = document.createElement('li');
+          cssSelectorList.appendChild(li);
+
+          // Anchor 
+          var cssSelector = document.createElement('a');
+          cssSelector.className = 'si-file-name';
+          cssSelector.innerHTML = result[i].fileName + ':' + result[i].lineNumber;
+          cssSelector.href = TEXTMATE + '://open?url=' + result[i].filePath + '&line=' + result[i].lineNumber;
+          li.appendChild(cssSelector);
+
+          // CSS Selector
+          var cssSelector = document.createElement('div');
+          cssSelector.className = 'si-css-selector';
+          cssSelector.innerHTML = result[i].cssText + ' {';
+          li.appendChild(cssSelector);
+
+          var cssProperties = document.createElement('ul');
+          cssProperties.className = 'si-css-properties';
+          li.appendChild(cssProperties);
+
+          for(var y in result[i].cssProperties) {
+            var cssProperty = document.createElement('li');
+            cssProperty.innerHTML = result[i].cssProperties[y].propertyKey + ': ' + result[i].cssProperties[y].propertyValue;
+            cssProperties.appendChild(cssProperty);
+          }
+
+          
+
+        }
+      }
     });
-    
   }
+
 
   // Execute constructor
   C.constructor();

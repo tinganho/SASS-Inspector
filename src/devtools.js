@@ -4,6 +4,7 @@
     function(sidebar) {
       function updateElementProperties() {
         sidebar.setPage('src/sidebar.html');
+        sidebar.setHeight('400px');
         // sidebar.setExpression("(" + pageGetProperties.toString() + ")()");
       }
       updateElementProperties();

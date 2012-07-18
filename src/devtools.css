@@ -1,0 +1,28 @@
+body {
+	font-family: Menlo, monospace;
+	font-size: 11px;
+	padding: 0px;
+	margin: 0px;
+}
+ul, li {
+	list-style: none;
+	padding: 0px;
+	margin: 0px;
+	
+}
+.si-css-selector-list li {
+	border-top: 1px solid #BFBFBF;
+	padding: 10px 2px 4px 4px;
+}
+.si-css-selector-list li:first-child {
+	border-top: none;
+}
+
+.si-css-properties li {
+	border: none;
+}
+.si-file-name {
+	margin-right: 10px;
+	float: right;
+	margin-left: 20px;
+}
