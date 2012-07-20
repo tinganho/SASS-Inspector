@@ -60,5 +60,3 @@ var Specificity = (function() {
     return C;
     
 })();
-
-document.write('hej');

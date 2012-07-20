@@ -1,3 +1,66 @@
+var Specificity = (function() {
+
+    var C = {};
+
+    function numMatches(selector, regex) {
+        return (selector.match(regex) || []).length;
+    }
+
+    function is(selector, element) {
+        var div = document.createElement("div"),
+            matchesSelector = div.webkitMatchesSelector;
+        return typeof selector == "string" ? matchesSelector.call(element, selector) : selector === element;
+    }
+
+    function getBiggestPoint(points) {
+        points = C.sortPoints(points);
+        return points[0];
+    }
+
+    C.sortPoints = function(points) {
+        points.sort(function(a, b) {
+            if (a[0] > b[0]) return -1;
+            if (a[0] < b[0]) return 1;
+            if (a[1] > b[1]) return -1;
+            if (a[1] < b[1]) return 1;
+            if (a[2] > b[2]) return -1;
+            if (a[2] < b[2]) return 1;
+            else return 0;
+        });
+
+        return points;
+    }
+
+    C.getSpecificity = function(selector, element) {
+
+        var splittedSelector = selector.split(',');
+        var points = [];
+
+        for (var i in splittedSelector) if (splittedSelector.hasOwnProperty(i)) {
+
+            if (!is(splittedSelector[i], element)) continue;
+
+            var numClasses = numMatches(splittedSelector[i], /\.[\w-_]+\b/g);
+            var numIds = numMatches(splittedSelector[i], /#[\w-_]+\b/g);
+            var numAttributes = 0;
+            var attributes = splittedSelector[i].match(/\[[^\]]*\b[\w-_]+\b[^\]]*\]/g) || [];
+            for (var idx = 0; idx < attributes.length; ++idx) {
+                numAttributes += (attributes[idx].match(/\b[\w-_]+\b/g) || []).length;
+            }
+            var results = [0, 0, 0];
+            results[0] = numIds;
+            results[1] = numMatches(splittedSelector[i], /\[[^\]]+\]/g) + numClasses;
+            results[2] = numMatches(splittedSelector[i], /\b[\w-_]+\b/g) - numIds - numClasses - numAttributes;
+            points.push(results);
+        }
+
+        return getBiggestPoint(points);
+    }
+
+    return C;
+    
+})();
+
 var SASSINSPECTOR = (function(Specificity){
 
 
@@ -13,11 +76,6 @@ var SASSINSPECTOR = (function(Specificity){
   // Description of your variable
   SASS_DEBUG_INFO = [];
   
-  /* 
-  -------------------------------------------------------
-  Constants
-  -------------------------------------------------------
-  */
   const 
   TEXTMATE = 'txmt',
   SUBLIME = 'subl',
@@ -45,11 +103,43 @@ var SASSINSPECTOR = (function(Specificity){
   -------------------------------------------------------
   */
   
+  /**
+   *  @private setPoints
+   *    Sets CSS points to selectors
+   *  @param Result Object
+   */
+  function sortDebugInfo(result) {
+
+    // Set points
+    var element = document.createElement(result.inspectedElement.tagName);
+    console.log(element)
+    for(var i in result.inspectedElement.attributes) {
+      with(result.inspectedElement) {
+        element.setAttribute(attributes[i].name, attributes[i].value);
+      }
+    }
+    console.log(element)
+    for(var i in result) if(result.hasOwnProperty(i)){
+      var point = Specificity.getSpecificity(result.sassDebugInfo[i].cssText, element);
+      result.sassDebugInfo[i].point = point;
+    }
+
+    result.sassDebugInfo.sort(function(a, b) {
+      if (a.points[0] > b.points[0]) return -1;
+      if (a.points[0] < b.points[0]) return 1;
+      if (a.points[1] > b.points[1]) return -1;
+      if (a.points[1] < b.points[1]) return 1;
+      if (a.points[2] > b.points[2]) return -1;
+      if (a.points[2] < b.points[2]) return 1;
+      else return 0;
+    });
+
+    return result;
+  }
  
  
   /**
    * @private method
-   * 
    */
   function pageGetProperties() {
     
@@ -100,29 +190,6 @@ var SASSINSPECTOR = (function(Specificity){
         properties.push({propertyKey: propertyKey, propertyValue: propertyValue});
       }
       return properties;
-    }
-
-    function specificity(selector, isStyleAttribute) {
-
-      selector = selector || "";
-      function numMatches(regex) {
-          return (selector.match(regex)||[]).length;
-      }
-
-      var numClasses = numMatches(/\.[\w-_]+\b/g);
-      var numIds = numMatches(/#[\w-_]+\b/g);
-      var numNamesInBraces = 0;
-      var namesInBraces = selector.match(/\[[^\]]*\b[\w-_]+\b[^\]]*\]/g) || [];
-      for (var idx = 0; idx < namesInBraces.length; ++idx) {
-          numNamesInBraces += (namesInBraces[idx].match(/\b[\w-_]+\b/g)||[]).length;
-      }
-
-      var results = [0,0,0,0];
-      results[0] = isStyleAttribute ? 1 : 0;
-      results[1] = numIds;
-      results[2] = numMatches(/\[[^\]]+\]/g) + numClasses;
-      results[3] = numMatches(/\b[\w-_]+\b/g) - numIds - numClasses - numNamesInBraces;
-      return results.join(',');
     }
 
     function searchAStyleSheet(styleSheet) {
@@ -177,8 +244,16 @@ var SASSINSPECTOR = (function(Specificity){
       if(styleSheets[i].cssRules == null) continue;
       searchAStyleSheet(styleSheets[i]);
     }
-    
-    return SASS_DEBUG_INFO;
+
+    var attributes = [];
+    for(var i in $0.attributes) if($0.attributes.hasOwnProperty(i)) {
+      if(typeof $0.attributes[i] == 'number') break;
+      var name = $0.attributes[i].name,
+      value = $0.attributes[i].value;
+      attributes.push({name: name, value: value});
+    }
+
+    return { sassDebugInfo: SASS_DEBUG_INFO, inspectedElement: {tagName: $0.tagName, attributes: attributes} };
   }
   
   /**
@@ -197,50 +272,57 @@ var SASSINSPECTOR = (function(Specificity){
    * @result void
    */
   C.evaluateCode = function() {
-    chrome.devtools.inspectedWindow.eval('(' + pageGetProperties.toString() + ')()', function(result, isException){
+
+    chrome.devtools.inspectedWindow.eval('(' + pageGetProperties.toString() + ')()', function(result, isException) {
+      console.log(result);
       if(!isException){
-        
-        if(result.length == 0) return;
-
-        var cssSelectorList = document.createElement('ul');
-        cssSelectorList.className = 'si-css-selector-list';
-        document.body.appendChild(cssSelectorList);
-        for(var i in result) {
-          
-          // Post element
-          var li = document.createElement('li');
-          cssSelectorList.appendChild(li);
-
-          // Anchor 
-          var cssSelector = document.createElement('a');
-          cssSelector.className = 'si-file-name';
-          cssSelector.innerHTML = result[i].fileName + ':' + result[i].lineNumber;
-          cssSelector.href = TEXTMATE + '://open?url=' + result[i].filePath + '&line=' + result[i].lineNumber;
-          li.appendChild(cssSelector);
-
-          // CSS Selector
-          var cssSelector = document.createElement('div');
-          cssSelector.className = 'si-css-selector';
-          cssSelector.innerHTML = result[i].cssText + ' {';
-          li.appendChild(cssSelector);
-
-          var cssProperties = document.createElement('ul');
-          cssProperties.className = 'si-css-properties';
-          li.appendChild(cssProperties);
-
-          for(var y in result[i].cssProperties) {
-            var cssProperty = document.createElement('li');
-            cssProperty.innerHTML = '<span class="si-css-property-key">' + result[i].cssProperties[y].propertyKey + '</span>' + ': ' + result[i].cssProperties[y].propertyValue + ';';
-            cssProperties.appendChild(cssProperty);
-          }
-
-          var endHardBracket = document.createElement('div');
-          endHardBracket.innerHTML = '}';
-          li.appendChild(endHardBracket);
-
-        }
+        document.write(JSON.stringify(result));
+        if(result.sassDebugInfo.length == 0) return;
+        sortDebugInfo(result);
+        C.renderSideBarPane(sassDebugInfo);
       }
     });
+  }
+
+  C.renderSideBarPane = function(sassDebugInfo) {
+
+    var cssSelectorList = document.createElement('ul');
+    cssSelectorList.className = 'si-css-selector-list';
+    document.body.appendChild(cssSelectorList);
+    for(var i in sassDebugInfo) {
+      
+      // Post element
+      var li = document.createElement('li');
+      cssSelectorList.appendChild(li);
+
+      // Anchor 
+      var cssSelector = document.createElement('a');
+      cssSelector.className = 'si-file-name';
+      cssSelector.innerHTML = sassDebugInfo[i].fileName + ':' + sassDebugInfo[i].lineNumber;
+      cssSelector.href = TEXTMATE + '://open?url=' + sassDebugInfo[i].filePath + '&line=' + sassDebugInfo[i].lineNumber;
+      li.appendChild(cssSelector);
+
+      // CSS Selector
+      var cssSelector = document.createElement('div');
+      cssSelector.className = 'si-css-selector';
+      cssSelector.innerHTML = sassDebugInfo[i].cssText + ' {';
+      li.appendChild(cssSelector);
+
+      var cssProperties = document.createElement('ul');
+      cssProperties.className = 'si-css-properties';
+      li.appendChild(cssProperties);
+
+      for(var y in sassDebugInfo[i].cssProperties) {
+        var cssProperty = document.createElement('li');
+        cssProperty.innerHTML = '<span class="si-css-property-key">' + sassDebugInfo[i].cssProperties[y].propertyKey + '</span>' + ': ' + sassDebugInfo[i].cssProperties[y].propertyValue + ';';
+        cssProperties.appendChild(cssProperty);
+      }
+
+      var endHardBracket = document.createElement('div');
+      endHardBracket.innerHTML = '}';
+      li.appendChild(endHardBracket);
+
+    }
   }
 
 
