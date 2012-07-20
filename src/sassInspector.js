@@ -1,67 +1,4 @@
-var Specificity = (function() {
-
-    var C = {};
-
-    function numMatches(selector, regex) {
-        return (selector.match(regex) || []).length;
-    }
-
-    function is(selector, element) {
-        var div = document.createElement("div"),
-            matchesSelector = div.webkitMatchesSelector;
-        return typeof selector == "string" ? matchesSelector.call(element, selector) : selector === element;
-    }
-
-    function getBiggestPoint(points) {
-        points = C.sortPoints(points);
-        return points[0];
-    }
-
-    C.sortPoints = function(points) {
-        points.sort(function(a, b) {
-            if (a[0] > b[0]) return -1;
-            if (a[0] < b[0]) return 1;
-            if (a[1] > b[1]) return -1;
-            if (a[1] < b[1]) return 1;
-            if (a[2] > b[2]) return -1;
-            if (a[2] < b[2]) return 1;
-            else return 0;
-        });
-
-        return points;
-    }
-
-    C.getSpecificity = function(selector, element) {
-
-        var splittedSelector = selector.split(',');
-        var points = [];
-
-        for (var i in splittedSelector) if (splittedSelector.hasOwnProperty(i)) {
-
-            if (!is(splittedSelector[i], element)) continue;
-
-            var numClasses = numMatches(splittedSelector[i], /\.[\w-_]+\b/g);
-            var numIds = numMatches(splittedSelector[i], /#[\w-_]+\b/g);
-            var numAttributes = 0;
-            var attributes = splittedSelector[i].match(/\[[^\]]*\b[\w-_]+\b[^\]]*\]/g) || [];
-            for (var idx = 0; idx < attributes.length; ++idx) {
-                numAttributes += (attributes[idx].match(/\b[\w-_]+\b/g) || []).length;
-            }
-            var results = [0, 0, 0];
-            results[0] = numIds;
-            results[1] = numMatches(splittedSelector[i], /\[[^\]]+\]/g) + numClasses;
-            results[2] = numMatches(splittedSelector[i], /\b[\w-_]+\b/g) - numIds - numClasses - numAttributes;
-            points.push(results);
-        }
-
-        return getBiggestPoint(points);
-    }
-
-    return C;
-    
-})();
-
-var SASSINSPECTOR = (function(Specificity){
+var SASSINSPECTOR = (function(){
 
 
   var C = {},
@@ -108,53 +45,25 @@ var SASSINSPECTOR = (function(Specificity){
    *    Sets CSS points to selectors
    *  @param Result Object
    */
-  function sortDebugInfo(result) {
-
-    // Set points
-    var element = document.createElement(result.inspectedElement.tagName);
-    console.log(element)
-    for(var i in result.inspectedElement.attributes) {
-      with(result.inspectedElement) {
-        element.setAttribute(attributes[i].name, attributes[i].value);
-      }
-    }
-    console.log(element)
-    for(var i in result) if(result.hasOwnProperty(i)){
-      var point = Specificity.getSpecificity(result.sassDebugInfo[i].cssText, element);
-      result.sassDebugInfo[i].point = point;
-    }
-
-    result.sassDebugInfo.sort(function(a, b) {
-      if (a.points[0] > b.points[0]) return -1;
-      if (a.points[0] < b.points[0]) return 1;
-      if (a.points[1] > b.points[1]) return -1;
-      if (a.points[1] < b.points[1]) return 1;
-      if (a.points[2] > b.points[2]) return -1;
-      if (a.points[2] < b.points[2]) return 1;
-      else return 0;
-    });
-
-    return result;
-  }
+  
  
  
   /**
    * @private method
    */
   function pageGetProperties() {
-    
     var n = 0,
     sassStylesheet = false,
-    SASS_DEBUG_INFO = new Array();
-    
-    function is(elem, selector) {
-      var div = document.createElement("div"),
-      matchesSelector = div.webkitMatchesSelector;
-      return typeof selector == "string" ? matchesSelector.call( elem, selector ) : selector === elem;
-    }
+    sassDebugInfo = [];
 
     function trim(text) {
       return text.replace(/^\s+|\s+$/g, '');
+    }
+
+    function is(selector, element) {
+        var div = document.createElement("div"),
+            matchesSelector = div.webkitMatchesSelector;
+        return typeof selector == "string" ? matchesSelector.call(element, selector) : selector === element;
     }
     
     function getFilePath(text) {
@@ -192,6 +101,55 @@ var SASSINSPECTOR = (function(Specificity){
       return properties;
     }
 
+    function numMatches(selector, regex) {
+        return (selector.match(regex) || []).length;
+    }
+
+    function getBiggestPoint(points) {
+        points = sortPoints(points);
+        return points[0];
+    }
+
+    function sortPoints(points) {
+        points.sort(function(a, b) {
+            if (a[0] > b[0]) return -1;
+            if (a[0] < b[0]) return 1;
+            if (a[1] > b[1]) return -1;
+            if (a[1] < b[1]) return 1;
+            if (a[2] > b[2]) return -1;
+            if (a[2] < b[2]) return 1;
+            else return 0;
+        });
+
+        return points;
+    }
+
+    function getSpecificity(selector, element) {
+
+        var splittedSelector = selector.split(',');
+        var points = [];
+
+        for (var i in splittedSelector) if (splittedSelector.hasOwnProperty(i)) {
+
+            if (!is(splittedSelector[i], element)) continue;
+
+            var numClasses = numMatches(splittedSelector[i], /\.[\w-_]+\b/g);
+            var numIds = numMatches(splittedSelector[i], /#[\w-_]+\b/g);
+            var numAttributes = 0;
+            var attributes = splittedSelector[i].match(/\[[^\]]*\b[\w-_]+\b[^\]]*\]/g) || [];
+            for (var idx = 0; idx < attributes.length; ++idx) {
+                numAttributes += (attributes[idx].match(/\b[\w-_]+\b/g) || []).length;
+            }
+            var results = [0, 0, 0];
+            results[0] = numIds;
+            results[1] = numMatches(splittedSelector[i], /\[[^\]]+\]/g) + numClasses;
+            results[2] = numMatches(splittedSelector[i], /\b[\w-_]+\b/g) - numIds - numClasses - numAttributes;
+            points.push(results);
+        }
+
+        return getBiggestPoint(points);
+    }
+
     function searchAStyleSheet(styleSheet) {
       
       sassStylesheet = false;
@@ -220,23 +178,43 @@ var SASSINSPECTOR = (function(Specificity){
           // console.log('hej');
         }
         
-        if(is($0, rules[i + 1].selectorText)) {
+        if(is(rules[i + 1].selectorText, $0)) {
 
             var filePath = getFilePath(rules[i].cssText),
             fileName = getFileName(filePath);
-
             var tmp = {
               cssText: rules[i + 1].selectorText,
               filePath: filePath,
               fileName: fileName,
               lineNumber: getLineNumber(rules[i].cssText),
-              cssProperties: getCSSProperties(rules[i + 1].cssText)
+              cssProperties: getCSSProperties(rules[i + 1].cssText),
+              point: getSpecificity(rules[i + 1].selectorText, $0),
+              order: n
             }
-            SASS_DEBUG_INFO.push(tmp);
+            sassDebugInfo.push(tmp);
+            n++;
         }
       }
-      
-      
+    }
+
+    function sortDebugInfo(sassDebugInfo) {
+
+      sassDebugInfo.sort(function(a, b) {
+        
+        if (a.point[0] > b.point[0]) return -1;
+        if (a.point[0] < b.point[0]) return 1;
+        if (a.point[1] > b.point[1]) return -1;
+        if (a.point[1] < b.point[1]) return 1;
+        if (a.point[2] > b.point[2]) return -1;
+        if (a.point[2] < b.point[2]) return 1;
+        if (a.order > b.order) return -1;
+        if (a.order < b.order) return 1;
+        else return 0;
+
+      });
+
+      return sassDebugInfo;
+
     }
     
     var styleSheets = document.styleSheets;
@@ -245,15 +223,9 @@ var SASSINSPECTOR = (function(Specificity){
       searchAStyleSheet(styleSheets[i]);
     }
 
-    var attributes = [];
-    for(var i in $0.attributes) if($0.attributes.hasOwnProperty(i)) {
-      if(typeof $0.attributes[i] == 'number') break;
-      var name = $0.attributes[i].name,
-      value = $0.attributes[i].value;
-      attributes.push({name: name, value: value});
-    }
+    sassDebugInfo = sortDebugInfo(sassDebugInfo);
 
-    return { sassDebugInfo: SASS_DEBUG_INFO, inspectedElement: {tagName: $0.tagName, attributes: attributes} };
+    return sassDebugInfo;
   }
   
   /**
@@ -273,12 +245,10 @@ var SASSINSPECTOR = (function(Specificity){
    */
   C.evaluateCode = function() {
 
-    chrome.devtools.inspectedWindow.eval('(' + pageGetProperties.toString() + ')()', function(result, isException) {
-      console.log(result);
+    chrome.devtools.inspectedWindow.eval('(' + pageGetProperties.toString() + ')()', function(sassDebugInfo, isException) {
+      console.log(sassDebugInfo)
       if(!isException){
-        document.write(JSON.stringify(result));
-        if(result.sassDebugInfo.length == 0) return;
-        sortDebugInfo(result);
+        if(sassDebugInfo.length == 0) return;
         C.renderSideBarPane(sassDebugInfo);
       }
     });
@@ -333,4 +303,4 @@ var SASSINSPECTOR = (function(Specificity){
   return C;
 
 
-})(Specificity);
+})();
