@@ -246,7 +246,6 @@ var SASSINSPECTOR = (function(){
   C.evaluateCode = function() {
 
     chrome.devtools.inspectedWindow.eval('(' + pageGetProperties.toString() + ')()', function(sassDebugInfo, isException) {
-      console.log(sassDebugInfo)
       if(!isException){
         if(sassDebugInfo.length == 0) return;
         C.renderSideBarPane(sassDebugInfo);
