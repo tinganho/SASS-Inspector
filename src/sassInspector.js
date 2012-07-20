@@ -1,4 +1,4 @@
-var SASSINSPECTOR = (function(){
+var SASSINSPECTOR = (function(Specificity){
 
 
   var C = {},
@@ -22,29 +22,7 @@ var SASSINSPECTOR = (function(){
   TEXTMATE = 'txmt',
   SUBLIME = 'subl',
   EMACS = 'emacs',
-  MACVIM = 'mvim' 
-
-
-
-  /* 
-  -------------------------------------------------------
-  Public variables 
-  -------------------------------------------------------
-  */
-
-  // Description of your variable
-  C.your_first_public_variable;
-
-  /**
-   *  @object 
-   *    Example object, this is an example project
-   *  @method
-   */
-  C.example_object = {
-    method1: function () {
-
-    }
-  }
+  MACVIM = 'mvim'
 
 
   /* 
@@ -110,19 +88,41 @@ var SASSINSPECTOR = (function(){
     }
 
     function getCSSProperties(text) {
-      var regEx = /(|[a-z]|[A-Z]|[0-9]|\s|[\(\)\!\-\.\,])+\s*\:\s*(|[a-z]|[A-Z]|[0-9]|\s|[\(\)\!\-\.\,])+\;/gi,
-      matches = text.match(regEx),
-      properties = [];
-      console.log(matches);
-      // for(var i in matches) {
-      //   // var _properties = matches[i].split(':');
-        
-      //   // propertyKey = trim(_properties[0]);
-      //   // propertyValue = trim(_properties[1].replace(';', ''));
-      //   // properties.push({propertyKey: propertyKey, propertyValue: propertyValue});
-      // }
-      return properties;
 
+      var regEx = /([a-z]|[\(\)\!\-\.\,])+\s*\:\s*([a-z]|[A-Z]|[0-9]|\s|[\(\)\!\-\.\,])+\;/gi;
+      matches = text.match(regEx);
+      properties = [];
+      
+      for(var i in matches) {
+        var _properties = matches[i].split(':');
+        propertyKey = trim(_properties[0]);
+        propertyValue = trim(_properties[1].replace(';', ''));
+        properties.push({propertyKey: propertyKey, propertyValue: propertyValue});
+      }
+      return properties;
+    }
+
+    function specificity(selector, isStyleAttribute) {
+
+      selector = selector || "";
+      function numMatches(regex) {
+          return (selector.match(regex)||[]).length;
+      }
+
+      var numClasses = numMatches(/\.[\w-_]+\b/g);
+      var numIds = numMatches(/#[\w-_]+\b/g);
+      var numNamesInBraces = 0;
+      var namesInBraces = selector.match(/\[[^\]]*\b[\w-_]+\b[^\]]*\]/g) || [];
+      for (var idx = 0; idx < namesInBraces.length; ++idx) {
+          numNamesInBraces += (namesInBraces[idx].match(/\b[\w-_]+\b/g)||[]).length;
+      }
+
+      var results = [0,0,0,0];
+      results[0] = isStyleAttribute ? 1 : 0;
+      results[1] = numIds;
+      results[2] = numMatches(/\[[^\]]+\]/g) + numClasses;
+      results[3] = numMatches(/\b[\w-_]+\b/g) - numIds - numClasses - numNamesInBraces;
+      return results.join(',');
     }
 
     function searchAStyleSheet(styleSheet) {
@@ -199,6 +199,9 @@ var SASSINSPECTOR = (function(){
   C.evaluateCode = function() {
     chrome.devtools.inspectedWindow.eval('(' + pageGetProperties.toString() + ')()', function(result, isException){
       if(!isException){
+        
+        if(result.length == 0) return;
+
         var cssSelectorList = document.createElement('ul');
         cssSelectorList.className = 'si-css-selector-list';
         document.body.appendChild(cssSelectorList);
@@ -227,11 +230,13 @@ var SASSINSPECTOR = (function(){
 
           for(var y in result[i].cssProperties) {
             var cssProperty = document.createElement('li');
-            cssProperty.innerHTML = result[i].cssProperties[y].propertyKey + ': ' + result[i].cssProperties[y].propertyValue;
+            cssProperty.innerHTML = '<span class="si-css-property-key">' + result[i].cssProperties[y].propertyKey + '</span>' + ': ' + result[i].cssProperties[y].propertyValue + ';';
             cssProperties.appendChild(cssProperty);
           }
 
-          
+          var endHardBracket = document.createElement('div');
+          endHardBracket.innerHTML = '}';
+          li.appendChild(endHardBracket);
 
         }
       }
@@ -246,4 +251,4 @@ var SASSINSPECTOR = (function(){
   return C;
 
 
-})();
+})(Specificity);

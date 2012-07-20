@@ -18,9 +18,17 @@ ul, li {
 	border-top: none;
 }
 
+.si-css-properties {
+	margin: 3px 0px 3px;
+}
 .si-css-properties li {
+	padding: 0px;
 	border: none;
 }
+	.si-css-property-key {
+		color: #C80000;
+		margin-left: 20px;
+	}
 .si-file-name {
 	margin-right: 10px;
 	float: right;
