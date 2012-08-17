@@ -40,12 +40,6 @@ var SASSINSPECTOR = (function(){
   -------------------------------------------------------
   */
   
-  /**
-   *  @private setPoints
-   *    Sets CSS points to selectors
-   *  @param Result Object
-   */
-  
  
  
   /**
@@ -166,17 +160,10 @@ var SASSINSPECTOR = (function(){
       }
 
       for(var i = 0; i < rules.length; i++) {
-        if(rules[i].type == CSSRule.IMPORT_RULE) {
-          searchAStyleSheet(rules[i].styleSheet);
-        }
         
+        if(rules[i].type == CSSRule.IMPORT_RULE) searchAStyleSheet(rules[i].styleSheet);
         if(rules[i].type != CSSRule.MEDIA_RULE) continue;
-        
         if(rules[i + 1].type != CSSRule.STYLE_RULE) continue;
-        
-        if(sassStylesheet){
-          // console.log('hej');
-        }
         
         if(is(rules[i + 1].selectorText, $0)) {
 
