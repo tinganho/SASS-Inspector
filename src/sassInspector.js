@@ -75,7 +75,7 @@ var SASSINSPECTOR = (function(){
     function getFileName(text) {
       var regEx = /([^\/])*(?!\/)(\.scss)/,
       matches = text.match(regEx);
-      return matches[0].substring(1, matches[0].length);
+      return matches[0].substring(0, matches[0].length);
     }
     
     function getLineNumber(text) {
@@ -173,6 +173,8 @@ var SASSINSPECTOR = (function(){
         
         if(is(rules[i + 1].selectorText, $0)) {
 
+            
+
             var filePath = getFilePath(rules[i].cssText),
             fileName = getFileName(filePath);
             var tmp = {
@@ -217,7 +219,6 @@ var SASSINSPECTOR = (function(){
     }
 
     sassDebugInfo = sortDebugInfo(sassDebugInfo);
-
     return sassDebugInfo;
   }
   
@@ -239,7 +240,9 @@ var SASSINSPECTOR = (function(){
   C.evaluateCode = function() {
 
     chrome.devtools.inspectedWindow.eval('(' + pageGetProperties.toString() + ')()', function(sassDebugInfo, isException) {
+      console.log(sassDebugInfo);
       if(!isException){
+        console.log(sassDebugInfo);
         if(sassDebugInfo.length == 0) return;
         C.renderSideBarPane(sassDebugInfo);
       }
