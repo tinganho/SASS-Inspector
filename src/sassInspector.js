@@ -1,3 +1,12 @@
+/*!
+ * SASS Inspector
+ *
+ * Released under the MIT license
+ * https://github.com/tinganho/SASS-Inspector
+ *
+ * Date: Wed Aug 22nd 2012 03:49:00 GMT+0200 (Eastern Daylight Time)
+ */
+ 
 var SASSINSPECTOR = (function(){
 
 
@@ -14,10 +23,7 @@ var SASSINSPECTOR = (function(){
   SASS_DEBUG_INFO = [];
   
   const 
-  TEXTMATE = 'txmt',
-  SUBLIME = 'subl',
-  EMACS = 'emacs',
-  MACVIM = 'mvim'
+  TEXTMATE = 'txmt';
 
 
   /* 
