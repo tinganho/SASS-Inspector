@@ -92,7 +92,8 @@ var SASSINSPECTOR = (function(){
       matches = text.match(regEx);
       properties = [];
       
-      for(var i in matches) {
+      var length = matches.length;
+      for(var i = 0; i < length; i++) {
         var _properties = matches[i].split(':');
         propertyKey = trim(_properties[0]);
         propertyValue = trim(_properties[1].replace(';', ''));
@@ -165,15 +166,17 @@ var SASSINSPECTOR = (function(){
         return;
       }
 
+
+
       for(var i = 0; i < rules.length; i++) {
-        
         if(rules[i].type == CSSRule.IMPORT_RULE) searchAStyleSheet(rules[i].styleSheet);
         if(rules[i].type != CSSRule.MEDIA_RULE) continue;
         if(rules[i + 1].type != CSSRule.STYLE_RULE) continue;
-        
-        if(is(rules[i + 1].selectorText, $0)) {
 
-            
+        // Remove all proprietary pseudo element CSS selectors
+        if(rules[i + 1].selectorText.indexOf('::-') != -1) continue;
+
+        if(is(rules[i + 1].selectorText, $0)) {
 
             var filePath = getFilePath(rules[i].cssText),
             fileName = getFileName(filePath);
@@ -186,7 +189,9 @@ var SASSINSPECTOR = (function(){
               point: getSpecificity(rules[i + 1].selectorText, $0),
               order: n
             }
+
             sassDebugInfo.push(tmp);
+            
             n++;
         }
       }
@@ -240,9 +245,7 @@ var SASSINSPECTOR = (function(){
   C.evaluateCode = function() {
 
     chrome.devtools.inspectedWindow.eval('(' + pageGetProperties.toString() + ')()', function(sassDebugInfo, isException) {
-      console.log(sassDebugInfo);
       if(!isException){
-        console.log(sassDebugInfo);
         if(sassDebugInfo.length == 0) return;
         C.renderSideBarPane(sassDebugInfo);
       }
