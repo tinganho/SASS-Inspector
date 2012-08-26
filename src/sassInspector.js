@@ -88,8 +88,10 @@ var SASSINSPECTOR = (function(){
 
     function getCSSProperties(text) {
 
-      var regEx = /([a-z]|[\(\)\!\-\.\,])+\s*\:\s*([a-z]|[A-Z]|[0-9]|\s|[\(\)\!\-\.\,])+\;/gi;
+      if(!text) return false;
+      var regEx = /([a-z]|[\(\)\!\-\.\,])+\s*\:\s*([a-z]|[0-9]|[\/\s\(\)\!\-\.\,%])+\;/gi,
       matches = text.match(regEx);
+      if(!matches) return false;
       properties = [];
       
       var length = matches.length;
@@ -180,6 +182,10 @@ var SASSINSPECTOR = (function(){
 
             var filePath = getFilePath(rules[i].cssText),
             fileName = getFileName(filePath);
+
+            
+            console.log(rules[i + 1].cssText);
+
             var tmp = {
               cssText: rules[i + 1].selectorText,
               filePath: filePath,
@@ -189,6 +195,8 @@ var SASSINSPECTOR = (function(){
               point: getSpecificity(rules[i + 1].selectorText, $0),
               order: n
             }
+
+
 
             sassDebugInfo.push(tmp);
             
