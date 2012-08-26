@@ -1,6 +1,6 @@
 {
   "name": "SASS Inspector",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "manifest_version": 2,
   "description": "Inspect CSS with file name and line numbers",
   "devtools_page": "src/devtools.html"
