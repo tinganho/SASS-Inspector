@@ -235,10 +235,6 @@ var SASSINSPECTOR = (function(){
     return sassDebugInfo;
   }
   
-  /**
-   * 
-   */
-  
   /* 
   -------------------------------------------------------
   Public methods 
