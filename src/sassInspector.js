@@ -73,7 +73,7 @@ var SASSINSPECTOR = (function(){
     }
 
     function getFileName(text) {
-      var regEx = /([^\/])*(?!\/)(\.scss)/,
+      var regEx = /([^\/])*(?!\/)(\.s[ac]ss)/,
       matches = text.match(regEx);
       return matches[0].substring(0, matches[0].length);
     }
