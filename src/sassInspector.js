@@ -183,9 +183,6 @@ var SASSINSPECTOR = (function(){
             var filePath = getFilePath(rules[i].cssText),
             fileName = getFileName(filePath);
 
-            
-            console.log(rules[i + 1].cssText);
-
             var tmp = {
               cssText: rules[i + 1].selectorText,
               filePath: filePath,
