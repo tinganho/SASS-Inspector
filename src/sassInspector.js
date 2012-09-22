@@ -61,9 +61,14 @@ var SASSINSPECTOR = (function(){
     }
 
     function is(selector, element) {
+      try {
         var div = document.createElement("div"),
-            matchesSelector = div.webkitMatchesSelector;
+        matchesSelector = div.webkitMatchesSelector;
         return typeof selector == "string" ? matchesSelector.call(element, selector) : selector === element;
+      } catch(e) {
+        console.log(selector);
+        console.log(e);
+      }
     }
     
     function getFilePath(text) {
@@ -192,9 +197,7 @@ var SASSINSPECTOR = (function(){
               point: getSpecificity(rules[i + 1].selectorText, $0),
               order: n
             }
-
-
-
+            
             sassDebugInfo.push(tmp);
             
             n++;
