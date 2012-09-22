@@ -62,13 +62,12 @@ var SASSINSPECTOR = (function(){
 
     function is(selector, element) {
       try {
-        var div = document.createElement("div"),
-        matchesSelector = div.webkitMatchesSelector;
-        return typeof selector == "string" ? matchesSelector.call(element, selector) : selector === element;
+        return typeof selector == "string" ? document.body.webkitMatchesSelector(selector, element) : selector === element;
       } catch(e) {
         console.log(selector);
         console.log(e);
       }
+      return false;
     }
     
     function getFilePath(text) {
