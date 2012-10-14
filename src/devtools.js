@@ -13,17 +13,17 @@
     function(sidebar) {
       function updateElementProperties() {
         sidebar.setPage('src/sidebar.html');
-        var _iframe = document.createElement('iframe');
-        _iframe.src = 'sidebar.html';
-        _iframe.addEventListener('load', function(){
-            setTimeout(function(){
-              var height = _iframe.contentWindow.getComputedStyle(_iframe.contentDocument.body).height;
-              var height = parseInt(height.replace('px', ''), 10) - 25;
-              sidebar.setHeight(height + 'px');
-            }, 200);
-        }, false);
-        document.body.appendChild(_iframe);
-
+        sidebar.onShown.addListener(function(win){
+          setTimeout(function(){
+            var ul = win.document.body.getElementsByClassName('si-css-selector-list');
+            if(!ul) return false;
+            var cheight = win.getComputedStyle(ul[0]).height
+            height = parseInt(cheight.replace('px', ''), 10);
+            if(height > 1200) height = 400;
+            sidebar.setHeight(height + 'px');
+          }, 300);
+          
+        });
       }
       updateElementProperties();
       chrome.devtools.panels.elements.onSelectionChanged.addListener(updateElementProperties);
