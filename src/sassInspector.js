@@ -89,17 +89,25 @@ var SASSINSPECTOR = (function(){
     function getCSSProperties(text) {
 
       if(!text) return false;
-      var regEx = /([a-z]|[\(\)\!\-\.\,])+\s*\:\s*([a-z]|[0-9]|[\/\s\(\)\!\-\.\,%])+\;/gi,
-      matches = text.match(regEx);
+      
+      try {
+        var regEx = /([a-z]|[\(\)\!\-\.\,\:])+\s*\:\s*([a-z]|[A-Z]|[0-9]|[\+\/\s\(\)\!\-\.\,\%\'])+:?([a-z]|[A-Z]|[0-9]|[\+\/\s\(\)\!\-\.\,\%\'])*;?([a-z]|[A-Z]|[0-9]|[\+\/\s\(\)\!\-\.\,\%\'])*\;/gi,
+        matches = text.match(regEx);
+      }catch(e) {
+        console.log(e);
+      }
+      
       if(!matches) return false;
       properties = [];
       
       var length = matches.length;
       for(var i = 0; i < length; i++) {
-        var _properties = matches[i].split(':');
-        propertyKey = trim(_properties[0]);
-        propertyValue = trim(_properties[1].replace(';', ''));
-        properties.push({propertyKey: propertyKey, propertyValue: propertyValue});
+
+        var keyValueSeparator = matches[i].indexOf(':');
+        var key = trim(matches[i].substring(0, keyValueSeparator));
+        var value = trim(matches[i].substring(keyValueSeparator + 1, matches[i].lastIndexOf(';')));
+
+        properties.push({key: key, value: value});
       }
       return properties;
     }
@@ -283,7 +291,7 @@ var SASSINSPECTOR = (function(){
 
       for(var y in sassDebugInfo[i].cssProperties) {
         var cssProperty = document.createElement('li');
-        cssProperty.innerHTML = '<span class="si-css-property-key">' + sassDebugInfo[i].cssProperties[y].propertyKey + '</span>' + ': ' + sassDebugInfo[i].cssProperties[y].propertyValue + ';';
+        cssProperty.innerHTML = '<span class="si-css-property-key">' + sassDebugInfo[i].cssProperties[y].key + '</span>' + ': ' + sassDebugInfo[i].cssProperties[y].value + ';';
         cssProperties.appendChild(cssProperty);
       }
 
