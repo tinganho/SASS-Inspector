@@ -178,7 +178,7 @@ var SASSINSPECTOR = (function(){
 
 
 
-      for(var i = 0; i < rules.length; i++) {
+      for(var i = 0; i < rules.length - 1; i++) {
         if(rules[i].type == CSSRule.IMPORT_RULE) searchAStyleSheet(rules[i].styleSheet);
         if(rules[i].type != CSSRule.MEDIA_RULE) continue;
         if(rules[i + 1].type != CSSRule.STYLE_RULE) continue;
