@@ -22,7 +22,7 @@
             if(height > 1200) height = 400;
             sidebar.setHeight(height + 'px');
           }, 300);
-          
+
         });
       }
       updateElementProperties();

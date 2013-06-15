@@ -6,27 +6,27 @@
  *
  * Date: Wed Aug 22nd 2012 03:49:00 GMT+0200 (Eastern Daylight Time)
  */
- 
+
 var SASSINSPECTOR = (function(){
 
 
   var C = {},
 
 
-  /* 
+  /*
   -------------------------------------------------------
-  Private variables 
+  Private variables
   -------------------------------------------------------
   */
 
   // Description of your variable
   SASS_DEBUG_INFO = [];
-  
-  const 
+
+  const
   TEXTMATE = 'txmt';
 
 
-  /* 
+  /*
   -------------------------------------------------------
   Constructor
   -------------------------------------------------------
@@ -40,14 +40,14 @@ var SASSINSPECTOR = (function(){
     C.evaluateCode();
   }
 
-  /* 
+  /*
   -------------------------------------------------------
-  Private methods 
+  Private methods
   -------------------------------------------------------
   */
-  
- 
- 
+
+
+
   /**
    * @private method
    */
@@ -65,7 +65,7 @@ var SASSINSPECTOR = (function(){
             matchesSelector = div.webkitMatchesSelector;
         return typeof selector == "string" ? matchesSelector.call(element, selector) : selector === element;
     }
-    
+
     function getFilePath(text) {
       var regEx = /file:\/\/(.*)'/,
       matches = text.match(regEx);
@@ -77,7 +77,7 @@ var SASSINSPECTOR = (function(){
       matches = text.match(regEx);
       return matches[0].substring(0, matches[0].length);
     }
-    
+
     function getLineNumber(text) {
       var regEx = /(line)\s{\s(font\-family:\s')\d+'/,
       matches = text.match(regEx),
@@ -89,27 +89,18 @@ var SASSINSPECTOR = (function(){
     function getCSSProperties(text) {
 
       if(!text) return false;
-      
-      try {
-        var regEx = /([a-z]|[\(\)\!\-\.\,\:])+\s*\:\s*([a-z]|[A-Z]|[0-9]|[\+\/\s\(\)\!\-\.\,\%\'])+:?([a-z]|[A-Z]|[0-9]|[\+\/\s\(\)\!\-\.\,\%\'])*;?([a-z]|[A-Z]|[0-9]|[\+\/\s\(\)\!\-\.\,\%\'])*\;/gi,
-        matches = text.match(regEx);
-      }catch(e) {
-        console.log(e);
-      }
-      
-      if(!matches) return false;
-      properties = [];
-      
-      var length = matches.length;
-      for(var i = 0; i < length; i++) {
 
-        var keyValueSeparator = matches[i].indexOf(':');
-        var key = trim(matches[i].substring(0, keyValueSeparator));
-        var value = trim(matches[i].substring(keyValueSeparator + 1, matches[i].lastIndexOf(';')));
+      var cssRules = text.match(/\{(.*)\}/)[1].split(';');
+      cssRules = cssRules.slice(0, cssRules.length - 1);
 
-        properties.push({key: key, value: value});
-      }
-      return properties;
+      return cssRules.map(function(cssRule) {
+        var cssRule = cssRule.split(':');
+        if(cssRule.length > 2) {
+          var _splitted = cssRule.splice(1);
+          cssRule.push(_splitted.join(''));
+        }
+        return { key : trim(cssRule[0]), value : trim(cssRule[1])};
+      });
     }
 
     function numMatches(selector, regex) {
@@ -162,21 +153,19 @@ var SASSINSPECTOR = (function(){
     }
 
     function searchAStyleSheet(styleSheet) {
-      
+
       sassStylesheet = false;
       if(styleSheet.cssRules == null) return;
-      
+
       var rules = styleSheet.cssRules;
-      
-      // Minimum requirements for a SASS debug stylesheet    
+
+      // Minimum requirements for a SASS debug stylesheet
       if(rules[0].type == CSSRule.MEDIA_RULE) {
         if(rules[0].media.mediaText != '-sass-debug-info') return;
         sassStylesheet = true;
       }else if(rules[0].type == CSSRule.STYLE_RULE) {
         return;
       }
-
-
 
       for(var i = 0; i < rules.length - 1; i++) {
         if(rules[i].type == CSSRule.IMPORT_RULE) searchAStyleSheet(rules[i].styleSheet);
@@ -188,24 +177,24 @@ var SASSINSPECTOR = (function(){
 
         if(is(rules[i + 1].selectorText, $0)) {
 
-            var filePath = getFilePath(rules[i].cssText),
-            fileName = getFileName(filePath);
+          var filePath = getFilePath(rules[i].cssText),
+          fileName = getFileName(filePath);
 
-            var tmp = {
-              cssText: rules[i + 1].selectorText,
-              filePath: filePath,
-              fileName: fileName,
-              lineNumber: getLineNumber(rules[i].cssText),
-              cssProperties: getCSSProperties(rules[i + 1].cssText),
-              point: getSpecificity(rules[i + 1].selectorText, $0),
-              order: n
-            }
+          var tmp = {
+            cssText: rules[i + 1].selectorText,
+            filePath: filePath,
+            fileName: fileName,
+            lineNumber: getLineNumber(rules[i].cssText),
+            cssProperties: getCSSProperties(rules[i + 1].cssText),
+            point: getSpecificity(rules[i + 1].selectorText, $0),
+            order: n
+          };
+          sassDebugInfo.push(tmp);
 
 
 
-            sassDebugInfo.push(tmp);
-            
-            n++;
+
+          n++;
         }
       }
     }
@@ -213,7 +202,7 @@ var SASSINSPECTOR = (function(){
     function sortDebugInfo(sassDebugInfo) {
 
       sassDebugInfo.sort(function(a, b) {
-        
+
         if (a.point[0] > b.point[0]) return -1;
         if (a.point[0] < b.point[0]) return 1;
         if (a.point[1] > b.point[1]) return -1;
@@ -229,7 +218,7 @@ var SASSINSPECTOR = (function(){
       return sassDebugInfo;
 
     }
-    
+
     var styleSheets = document.styleSheets;
     for(var i in styleSheets) {
       if(styleSheets[i].cssRules == null) continue;
@@ -239,13 +228,13 @@ var SASSINSPECTOR = (function(){
     sassDebugInfo = sortDebugInfo(sassDebugInfo);
     return sassDebugInfo;
   }
-  
-  /* 
+
+  /*
   -------------------------------------------------------
-  Public methods 
+  Public methods
   -------------------------------------------------------
   */
- 
+
   /**
    * @public method
    *  Evaluate code
@@ -267,12 +256,12 @@ var SASSINSPECTOR = (function(){
     cssSelectorList.className = 'si-css-selector-list';
     document.body.appendChild(cssSelectorList);
     for(var i in sassDebugInfo) {
-      
+
       // Post element
       var li = document.createElement('li');
       cssSelectorList.appendChild(li);
 
-      // Anchor 
+      // Anchor
       var cssSelector = document.createElement('a');
       cssSelector.className = 'si-file-name';
       cssSelector.innerHTML = sassDebugInfo[i].fileName + ':' + sassDebugInfo[i].lineNumber;
