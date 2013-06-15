@@ -191,9 +191,6 @@ var SASSINSPECTOR = (function(){
           };
           sassDebugInfo.push(tmp);
 
-
-
-
           n++;
         }
       }
@@ -221,7 +218,8 @@ var SASSINSPECTOR = (function(){
 
     var styleSheets = document.styleSheets;
     for(var i in styleSheets) {
-      if(styleSheets[i].cssRules == null) continue;
+      if(styleSheets[i].cssRules == null
+      || styleSheets[i].cssRules.length === 0) continue;
       searchAStyleSheet(styleSheets[i]);
     }
 
