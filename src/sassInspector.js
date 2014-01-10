@@ -73,7 +73,7 @@ var SASSINSPECTOR = (function(){
     }
 
     function getFileName(text) {
-      var regEx = /([^\/])*(?!\/)(\.s[ac]ss)/,
+      var regEx = /([^\/])*(?!\/)(\.s[ac]ss|\.styl|\.less)/,
       matches = text.match(regEx);
       return matches[0].substring(0, matches[0].length);
     }
@@ -153,7 +153,7 @@ var SASSINSPECTOR = (function(){
     }
 
     function searchAStyleSheet(styleSheet) {
-
+      var debugInfoTokens = ['-sass-debug-info', '-stylus-debug-info', '-less-debug-info'];
       sassStylesheet = false;
       if(styleSheet.cssRules == null) return;
 
@@ -161,7 +161,7 @@ var SASSINSPECTOR = (function(){
 
       // Minimum requirements for a SASS debug stylesheet
       if(rules[0].type == CSSRule.MEDIA_RULE) {
-        if(rules[0].media.mediaText != '-sass-debug-info') return;
+        if(debugInfoTokens.indexOf(rules[0].media.mediaText) < -1) return;
         sassStylesheet = true;
       }else if(rules[0].type == CSSRule.STYLE_RULE) {
         return;
